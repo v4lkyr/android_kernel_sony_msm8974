@@ -1464,6 +1464,10 @@ static ssize_t aio_setup_vectored_rw(int type, struct kiocb *kiocb, bool compat)
 	if (ret < 0)
 		goto out;
 
+	ret = rw_verify_area(type, kiocb->ki_filp, &kiocb->ki_pos, ret);
+	if (ret < 0)
+		goto out;
+
 	kiocb->ki_nr_segs = kiocb->ki_nbytes;
 	kiocb->ki_cur_seg = 0;
 	/* ki_nbytes/left now reflect bytes instead of segs */
@@ -1477,17 +1481,24 @@ out:
 
 static ssize_t aio_setup_single_vector(int type, struct file * file, struct kiocb *kiocb)
 {
-	size_t len = kiocb->ki_nbytes;
+	int bytes;
+
+	bytes = rw_verify_area(type, file, &kiocb->ki_pos, kiocb->ki_left);
+	if (bytes < 0)
+		return bytes;
+
+	/*size_t len = kiocb->ki_nbytes;
 
 	if (len > MAX_RW_COUNT)
 		len = MAX_RW_COUNT;
 
 	if (unlikely(!access_ok(!rw, kiocb->ki_buf, len)))
-                return -EFAULT;
+                return -EFAULT;*/
 
 	kiocb->ki_iovec = &kiocb->ki_inline_vec;
 	kiocb->ki_iovec->iov_base = kiocb->ki_buf;
-	kiocb->ki_iovec->iov_len = len;
+	/*kiocb->ki_iovec->iov_len = len;*/
+	kiocb->ki_iovec->iov_len = bytes;
 	kiocb->ki_nr_segs = 1;
 	kiocb->ki_cur_seg = 0;
 	return 0;
