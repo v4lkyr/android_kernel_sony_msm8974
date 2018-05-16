@@ -1003,6 +1003,10 @@ static void hci_power_on(struct work_struct *work)
 	BT_DBG("%s", hdev->name);
 
 	err = hci_dev_open(hdev->id);
+	/*if (err < 0) {
+		mgmt_set_powered_failed(hdev, err);
+ 		return;
+	}*/
 	if (err && err != -EALREADY)
 		return;
 
