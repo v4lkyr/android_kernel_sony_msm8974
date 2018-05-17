@@ -110,6 +110,9 @@ struct link_key {
 	u8 auth;
 	u8 dlen;
 	u8 data[0];
+
+	u8 enc_size;
+	bool authenticated;
 };
 
 struct oob_data {
