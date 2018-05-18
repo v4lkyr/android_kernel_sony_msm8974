@@ -148,16 +148,16 @@ unsigned __msm_gpio_get_intr_config(unsigned gpio)
 void __msm_gpio_set_intr_cfg_enable(unsigned gpio, unsigned val)
 {
 	if (val) {
-		set_gpio_bits(INTR_ENABLE, GPIO_INTR_CFG(gpio));
+		set_gpio_bits(BIT(INTR_ENABLE), GPIO_INTR_CFG(gpio));
 
 	} else {
-		clr_gpio_bits(INTR_ENABLE, GPIO_INTR_CFG(gpio));
+		clr_gpio_bits(BIT(INTR_ENABLE), GPIO_INTR_CFG(gpio));
 	}
 }
 
 unsigned  __msm_gpio_get_intr_cfg_enable(unsigned gpio)
 {
-	return __msm_gpio_get_intr_config(gpio) & INTR_ENABLE;
+	return __msm_gpio_get_intr_config(gpio) & BIT(INTR_ENABLE);
 }
 
 void __msm_gpio_set_intr_cfg_type(unsigned gpio, unsigned type)
@@ -213,7 +213,7 @@ void __msm_gpio_install_direct_irq(unsigned gpio, unsigned irq,
 	__raw_writel(__raw_readl(GPIO_CONFIG(gpio)) | BIT(GPIO_OE_BIT),
 		GPIO_CONFIG(gpio));
 	__raw_writel(__raw_readl(GPIO_INTR_CFG(gpio)) &
-		~(INTR_RAW_STATUS_EN | INTR_ENABLE),
+		~(BIT(INTR_RAW_STATUS_EN) | BIT(INTR_ENABLE)),
 		GPIO_INTR_CFG(gpio));
 	__raw_writel(DC_IRQ_ENABLE | TARGET_PROC_NONE,
 		GPIO_INTR_CFG_SU(gpio));
