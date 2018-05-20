@@ -3175,6 +3175,10 @@ static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	pte_unmap(page_table);
 
 	/* File mapping without ->vm_ops ? */
+	/*if (vma->vm_flags & VM_SHARED)
+		return VM_FAULT_SIGBUS;*/
+
+	/* File mapping without ->vm_ops ? */
 	if (vma->vm_flags & VM_SHARED)
 		return VM_FAULT_SIGSEGV;
 
