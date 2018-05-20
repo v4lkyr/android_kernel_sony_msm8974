@@ -95,7 +95,7 @@
  	u16 icid;
  
 -	if (cmd_len != sizeof(*rsp))
-+	if (cmd_len < sizeof(*rsp))
++	if (cmd_len != sizeof(*rsp))
  		return -EPROTO;
  
  	icid = le16_to_cpu(rsp->icid);

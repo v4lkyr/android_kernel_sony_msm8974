@@ -262,6 +262,9 @@ struct usb_xpad {
 
 	int interface_number;
 
+	struct urb *bulk_out;
+	unsigned char *bdata;
+
 	struct urb *irq_in;		/* urb for interrupt in report */
 	unsigned char *idata;		/* input data */
 	dma_addr_t idata_dma;
@@ -523,6 +526,23 @@ exit:
 	if (retval)
 		err ("%s - usb_submit_urb failed with result %d",
 		     __func__, retval);
+}
+
+static void xpad_bulk_out(struct urb *urb)
+{
+	switch (urb->status) {
+	case 0:
+		/* success */
+		break;
+	case -ECONNRESET:
+	case -ENOENT:
+	case -ESHUTDOWN:
+		/* this urb is terminated, clean up */
+		dbg("%s - urb shutting down with status: %d", __func__, urb->status);
+		break;
+	default:
+		dbg("%s - nonzero urb status received: %d", __func__, urb->status);
+	}
 }
 
 #if defined(CONFIG_JOYSTICK_XPAD_FF) || defined(CONFIG_JOYSTICK_XPAD_LEDS)
@@ -972,10 +992,24 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 		goto fail5;
 
 	ep_irq_in = &intf->cur_altsetting->endpoint[0].desc;
-	usb_fill_int_urb(xpad->irq_in, udev,
+	/*usb_fill_int_urb(xpad->irq_in, udev,
 			 usb_rcvintpipe(udev, ep_irq_in->bEndpointAddress),
 			 xpad->idata, XPAD_PKT_LEN, xpad_irq_in,
-			 xpad, ep_irq_in->bInterval);
+			 xpad, ep_irq_in->bInterval);*/
+
+	if (usb_endpoint_is_bulk_out(ep_irq_in)) {
+			usb_fill_bulk_urb(xpad->bulk_out, udev,
+					  usb_sndbulkpipe(udev,
+							  ep_irq_in->bEndpointAddress),
+					  xpad->bdata, XPAD_PKT_LEN,
+					  xpad_bulk_out, xpad);
+		} else {
+			usb_fill_int_urb(xpad->bulk_out, udev,
+					 usb_sndintpipe(udev,
+							ep_irq_in->bEndpointAddress),
+					 xpad->bdata, XPAD_PKT_LEN,
+					 xpad_bulk_out, xpad, 0);
+		}
 	xpad->irq_in->transfer_dma = xpad->idata_dma;
 	xpad->irq_in->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 
